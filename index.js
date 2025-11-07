@@ -76,9 +76,17 @@ const certificateSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
-  certificateImageUrl: { 
+  certificateUrl: {
     type: String,
-    required: true 
+    required: true
+  },
+  certificateFileType: {
+    type: String,
+    default: 'application/pdf'
+  },
+  // Legacy field kept for backward compatibility
+  certificateImageUrl: {
+    type: String
   },
   createdAt: { 
     type: Date, 
@@ -259,13 +267,13 @@ async function generateCertificate(studentName, certificateId, programName, date
 
 async function uploadToSupabase(buffer, certificateId) {
   try {
-    const fileName = `Mediseek/${certificateId}.png`;
+    const fileName = `Mediseek/${certificateId}.pdf`;
     
     // Upload file to Supabase storage
     const { data, error } = await supabase.storage
       .from('Mediseek')
       .upload(fileName, buffer, {
-        contentType: 'image/png',
+        contentType: 'application/pdf',
         upsert: true
       });
 
@@ -436,8 +444,8 @@ app.post('/api/admin/upload-csv', multer({ storage: multer.memoryStorage() }).si
             const certificateId = `cert_${uuidv4()}`;
             const dateOfIssue = new Date();
 
-            // Generate certificate image
-            const imageBuffer = await generateCertificate(
+            // Generate certificate PDF
+            const pdfBuffer = await generateCertificate(
               student.studentName,
               certificateId,
               student.programName,
@@ -445,7 +453,7 @@ app.post('/api/admin/upload-csv', multer({ storage: multer.memoryStorage() }).si
             );
 
             // Upload to Supabase
-            const certificateImageUrl = await uploadToSupabase(imageBuffer, certificateId);
+            const certificateUrl = await uploadToSupabase(pdfBuffer, certificateId);
 
             // Save to MongoDB
             const certificate = new Certificate({
@@ -453,7 +461,9 @@ app.post('/api/admin/upload-csv', multer({ storage: multer.memoryStorage() }).si
               studentName: student.studentName,
               email: student.email,
               programName: student.programName,
-              certificateImageUrl,
+              certificateUrl,
+              certificateFileType: 'application/pdf',
+              certificateImageUrl: certificateUrl,
               dateOfIssue
             });
 
@@ -467,7 +477,7 @@ app.post('/api/admin/upload-csv', multer({ storage: multer.memoryStorage() }).si
               email: student.email,
               certificateId,
               status: 'Success',
-              certificateImageUrl
+              certificateUrl
             });
           } catch (error) {
             console.error(`Error processing ${student.studentName}:`, error.message);
@@ -539,7 +549,9 @@ app.get('/api/certificate/:certificateId', async (req, res) => {
         email: certificate.email,
         programName: certificate.programName,
         dateOfIssue: certificate.dateOfIssue,
-        certificateImageUrl: certificate.certificateImageUrl
+        certificateUrl: certificate.certificateUrl || certificate.certificateImageUrl,
+        certificateFileType: certificate.certificateFileType || 'application/pdf',
+        certificateImageUrl: certificate.certificateImageUrl || certificate.certificateUrl
       }
     });
   } catch (error) {
