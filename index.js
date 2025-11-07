@@ -271,7 +271,7 @@ async function uploadToSupabase(buffer, certificateId) {
 
 async function sendCertificateEmail(email, studentName, certificateId) {
   try {
-    const verificationUrl = `http://localhost:3000/certificate/${certificateId}`;
+    const verificationUrl = `https://upgradtask-frontend.vercel.app/certificate/${certificateId}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
