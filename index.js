@@ -300,7 +300,14 @@ async function sendCertificateEmail(email, studentName, certificateId) {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email send timeout')), 15000)
+      )
+    ]);
+
+    console.log(`✅ Email sent to ${email}:`, info.response);
   } catch (error) {
     console.error('Error sending email:', error);
     throw error;
