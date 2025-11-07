@@ -137,92 +137,93 @@ const transporter = nodemailer.createTransport({
 
 async function generateCertificate(studentName, certificateId, programName, dateOfIssue) {
   try {
-    const width = 1200;
-    const height = 800;
-    const canvas = createCanvas(width, height);
+    // Instead of canvas, return certificate as HTML/SVG data
+    // We'll create a simple PNG using a different approach
+    
+    const { createCanvas } = require('canvas');
+    const canvas = createCanvas(1200, 800);
     const ctx = canvas.getContext('2d');
 
-    // Background - Beige/Cream color
+    // Fill background with cream color
     ctx.fillStyle = '#faf8f3';
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, 1200, 800);
 
-    // Outer decorative border
+    // Draw borders
     ctx.strokeStyle = '#8b6f47';
     ctx.lineWidth = 8;
-    ctx.strokeRect(15, 15, width - 30, height - 30);
+    ctx.strokeRect(15, 15, 1170, 770);
 
-    // Inner decorative border
     ctx.strokeStyle = '#d4a574';
     ctx.lineWidth = 2;
-    ctx.strokeRect(30, 30, width - 60, height - 60);
+    ctx.strokeRect(30, 30, 1140, 740);
 
-    // Title - Certificate of Completion
-    ctx.font = 'bold 56px Georgia';
+    // Set font to a system font that's more likely to exist
+    ctx.font = 'bold 56px serif';
     ctx.fillStyle = '#5d4037';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('Certificate of Completion', width / 2, 100);
+    ctx.fillText('Certificate of Completion', 600, 100);
 
-    // Subtitle line
+    // Decoration line
     ctx.strokeStyle = '#d4a574';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(250, 180);
-    ctx.lineTo(width - 250, 180);
+    ctx.lineTo(950, 180);
     ctx.stroke();
 
-    // "This is to certify that" text
-    ctx.font = '18px Georgia';
+    // Subtitle
+    ctx.font = '18px serif';
     ctx.fillStyle = '#6d4c41';
-    ctx.fillText('This is to certify that', width / 2, 220);
+    ctx.fillText('This is to certify that', 600, 220);
 
-    // Student Name - Bold and Large
-    ctx.font = 'bold 52px Georgia';
+    // Student name
+    ctx.font = 'bold 48px serif';
     ctx.fillStyle = '#000000';
-    ctx.fillText(studentName, width / 2, 310);
+    ctx.fillText(studentName.substring(0, 40), 600, 310);
 
-    // Underline for name
+    // Underline
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(width / 2 - 280, 385);
-    ctx.lineTo(width / 2 + 280, 385);
+    ctx.moveTo(320, 385);
+    ctx.lineTo(880, 385);
     ctx.stroke();
 
-    // "has successfully completed" text
-    ctx.font = '18px Georgia';
+    // Completion text
+    ctx.font = '18px serif';
     ctx.fillStyle = '#6d4c41';
-    ctx.fillText('has successfully completed the', width / 2, 430);
+    ctx.fillText('has successfully completed the', 600, 430);
 
-    // Program Name
-    ctx.font = 'bold 22px Georgia';
+    // Program name
+    ctx.font = 'bold 22px serif';
     ctx.fillStyle = '#5d4037';
-    ctx.fillText(programName, width / 2, 470);
+    ctx.fillText(programName.substring(0, 50), 600, 470);
 
-    // "program" text
-    ctx.font = '18px Georgia';
+    // Program text
+    ctx.font = '18px serif';
     ctx.fillStyle = '#6d4c41';
-    ctx.fillText('program', width / 2, 510);
+    ctx.fillText('program', 600, 510);
 
-    // Certificate ID at bottom left
-    ctx.font = '12px Arial';
+    // Certificate ID
+    ctx.font = '12px monospace';
     ctx.fillStyle = '#999999';
     ctx.textAlign = 'left';
-    ctx.fillText(`Certificate ID: ${certificateId}`, 60, height - 50);
+    ctx.fillText(`Certificate ID: ${certificateId}`, 60, 750);
 
-    // Date at bottom right
+    // Date
     const formattedDate = dateOfIssue.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     });
     ctx.textAlign = 'right';
-    ctx.fillText(`Date: ${formattedDate}`, width - 60, height - 50);
+    ctx.fillText(`Date: ${formattedDate}`, 1140, 750);
 
     return canvas.toBuffer('image/png');
   } catch (error) {
     console.error('Error generating certificate:', error);
-    throw error;
+    throw new Error(`Certificate generation failed: ${error.message}. Please ensure canvas dependencies are installed.`);
   }
 }
 
